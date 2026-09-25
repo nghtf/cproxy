@@ -16,21 +16,28 @@ Before the first run, make sure the domains' DNS A/AAAA records already point to
 
 ## Adding a new site
 
+```bash
+make add <site> [DOMAIN=example.com]
+```
+
+This generates `sites-available/<site>.proxy.caddy` and `sites-available/<site>.stub.caddy` from the templates below (domain defaults to `<site>.com` if `DOMAIN` isn't given, container name defaults to `<site>`), and immediately enables the **stub** page for `<site>` (`sites/<site>.caddy`) so the domain shows an "under construction" page as soon as DNS points at this server.
+
+Then, once the site's container is actually up:
+
 1. In the site's `docker-compose.yml`, connect the service to the external `proxy` network — don't publish ports 80/443 to the host, only connect via the network.
-2. Add two files under `sites-available/`, based on the templates below:
-   - `<site>.proxy.caddy` — the normal working config (`reverse_proxy <container_name>:80`)
-   - `<site>.stub.caddy` — a placeholder (see below)
-3. Copy the working config to make it active: `cp sites-available/<site>.proxy.caddy sites/<site>.caddy`
-4. Reload the config with no downtime: `make reload` (or `make restart`)
+2. Review/edit `sites-available/<site>.proxy.caddy` (domain, container name) if needed.
+3. Switch from stub to the real proxy: `make unstub <site>`
 
 `Caddyfile` picks up all files under `sites/*.caddy` automatically (`import sites/*.caddy`) — you normally don't need to touch it.
 
 ### Templates
 
-Generic starting points, with `example.com` / `example-site` as placeholders to replace:
+`make add` is based on these generic templates, with `example.com` / `example-site` as placeholders:
 
 - `sites-available/_template.proxy.caddy`
 - `sites-available/_template.stub.caddy`
+
+They can also be copied and edited by hand instead of using `make add`:
 
 ```bash
 cp sites-available/_template.proxy.caddy sites-available/<site>.proxy.caddy

@@ -1,10 +1,10 @@
 SHELL := /bin/sh
 
-SITE := $(filter-out stub unstub,$(MAKECMDGOALS))
+SITE := $(filter-out stub unstub add,$(MAKECMDGOALS))
 
 .DEFAULT_GOAL := help
 
-.PHONY: help run stop restart reload logs ps stub unstub
+.PHONY: help run stop restart reload logs ps stub unstub add
 
 help:
 	@printf '%s\n' 'Available targets:'
@@ -14,6 +14,7 @@ help:
 	@printf '%s\n' '  make stop           Stop the proxy'
 	@printf '%s\n' '  make logs           Follow proxy logs'
 	@printf '%s\n' '  make ps             Show running containers'
+	@printf '%s\n' '  make add <site> [DOMAIN=example.com]   Create configs for a new site from templates, enabled as stub'
 	@printf '%s\n' '  make stub <site>    Show "under construction" stub for <site> instead of proxying'
 	@printf '%s\n' '  make unstub <site>  Restore normal proxying for <site>'
 
@@ -35,6 +36,22 @@ logs:
 
 ps:
 	docker compose ps
+
+add:
+	@if [ -z "$(SITE)" ]; then echo "Usage: make add <site> [DOMAIN=example.com]"; exit 1; fi
+	@if [ -f "sites-available/$(SITE).proxy.caddy" ] || [ -f "sites-available/$(SITE).stub.caddy" ]; then \
+		echo "Config for '$(SITE)' already exists in sites-available/"; exit 1; \
+	fi
+	@domain="$(DOMAIN)"; \
+	if [ -z "$$domain" ]; then domain="$(SITE).com"; fi; \
+	sed -e "s/example-site/$(SITE)/g" -e "s/example.com/$$domain/g" \
+		sites-available/_template.proxy.caddy > "sites-available/$(SITE).proxy.caddy"; \
+	sed -e "s/example.com/$$domain/g" \
+		sites-available/_template.stub.caddy > "sites-available/$(SITE).stub.caddy"
+	cp "sites-available/$(SITE).stub.caddy" "sites/$(SITE).caddy"
+	$(MAKE) reload
+	@printf '%s\n' "$(SITE): created sites-available/$(SITE).proxy.caddy and .stub.caddy (domain: $(if $(DOMAIN),$(DOMAIN),$(SITE).com)), enabled as stub"
+	@printf '%s\n' "Edit sites-available/$(SITE).proxy.caddy if the domain/container name need adjusting, then 'make unstub $(SITE)' when the site is ready."
 
 stub:
 	@if [ -z "$(SITE)" ]; then echo "Usage: make stub <site>"; exit 1; fi
