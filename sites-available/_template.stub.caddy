@@ -1,0 +1,4 @@
+example.com, www.example.com {
+  root * /srv/stub
+  file_server
+}

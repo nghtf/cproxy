@@ -1,0 +1,7 @@
+example.com {
+  redir https://www.example.com{uri} permanent
+}
+
+www.example.com {
+  reverse_proxy example-site:80
+}
