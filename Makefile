@@ -29,7 +29,11 @@ restart:
 	docker compose restart
 
 reload:
-	docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile
+	@if [ -z "$$(docker compose ps --status running -q caddy 2>/dev/null)" ]; then \
+		printf '%s\n' "Proxy isn't running — skipping reload (config will be picked up on 'make run')."; \
+	else \
+		docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile; \
+	fi
 
 logs:
 	docker compose logs -f caddy
