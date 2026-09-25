@@ -48,6 +48,7 @@ add:
 		sites-available/_template.proxy.caddy > "sites-available/$(SITE).proxy.caddy"; \
 	sed -e "s/example.com/$$domain/g" \
 		sites-available/_template.stub.caddy > "sites-available/$(SITE).stub.caddy"
+	@mkdir -p sites
 	cp "sites-available/$(SITE).stub.caddy" "sites/$(SITE).caddy"
 	$(MAKE) reload
 	@printf '%s\n' "$(SITE): created sites-available/$(SITE).proxy.caddy and .stub.caddy (domain: $(if $(DOMAIN),$(DOMAIN),$(SITE).com)), enabled as stub"
@@ -58,6 +59,7 @@ stub:
 	@if [ ! -f "sites-available/$(SITE).stub.caddy" ]; then \
 		echo "No stub config for '$(SITE)' (sites-available/$(SITE).stub.caddy not found)"; exit 1; \
 	fi
+	@mkdir -p sites
 	cp "sites-available/$(SITE).stub.caddy" "sites/$(SITE).caddy"
 	$(MAKE) reload
 	@printf '%s\n' "$(SITE): stub enabled"
@@ -67,6 +69,7 @@ unstub:
 	@if [ ! -f "sites-available/$(SITE).proxy.caddy" ]; then \
 		echo "No proxy config for '$(SITE)' (sites-available/$(SITE).proxy.caddy not found)"; exit 1; \
 	fi
+	@mkdir -p sites
 	cp "sites-available/$(SITE).proxy.caddy" "sites/$(SITE).caddy"
 	$(MAKE) reload
 	@printf '%s\n' "$(SITE): proxy restored"
